@@ -116,44 +116,64 @@ class Stocks:
 
 
 class Benchmarking:
-    pass
+    def __init__(self):
+        self.nifty50_price = yf.download(
+            tickers='^NSEI', interval='1d', period='1y', rounding=True)
+
+    def CompairWithBenchmark(self):
+        pass
 
 
 class Portfolio:
-    # def __init__(self, class_instance):
-    #     self.class_instance = class_instance
-    #     self.hist_data = class_instance.hist_data
-    #     self.todays_date = class_instance.todays_date
-
-    # def ActiveStockSelectionStrategy(self, stock_list):
-    #     selected_stocks = []
-    #     for stock in stocks:
-    #         monthly_return = stock.MonthlyRet(curDate)
-    #         if monthly_return > 0:
-    #             selected_stocks.append(stock.symbol)
-    #     return selected_stocks
 
     def __init__(self, symbols):
+
         self.symbols = symbols
         self.stocks = [Stocks(symbol) for symbol in symbols]
+        self.nifty50_stocks = {}
+        self.active_stocks = {}
 
-    def ActiveStockSelectionStrategy(self):
-        active_stocks = {}
+    def Nifty50_monthlyRet(self):
 
         for stock in self.stocks:
             monthly_return = stock.MonthlyRet()
+            self.nifty50_stocks[stock.symbol] = monthly_return
 
-            if monthly_return is not None and monthly_return > 0:
-                active_stocks[stock.symbol] = monthly_return
+        nifty50_stocks = dict(sorted(self.nifty50_stocks.items(),
+                                     key=lambda item: item[1], reverse=True))
 
-        active_stocks = dict(sorted(active_stocks.items(),
+        return (nifty50_stocks)
+
+    def ActiveStockSelectionStrategy(self):
+
+        for symbol, value in self.Nifty50_monthlyRet().items():
+            if value > 0:
+                self.active_stocks[symbol] = value
+
+        active_stocks = dict(sorted(self.active_stocks.items(),
                              key=lambda item: item[1], reverse=True))
 
-        print(str(len(active_stocks)) +
-              " Are selected for the active stock strategy")
         top_10_active_stocks = dict(list(active_stocks.items())[:10])
 
         return active_stocks, top_10_active_stocks
+
+    def display_stock_selection(self):
+
+        print(
+            f"\n{len(self.nifty50_stocks)} Stocks in total.")
+        print(
+            f"{len(self.active_stocks)} Stocks selected for active strategy (UPWARDS).")
+        print(
+            f"{len(self.nifty50_stocks) - len(self.active_stocks)} Stocks not selected (DOWNWARDS).")
+
+        print("\nTop 10 Active Stocks[UPWARDS]:")
+        for symbol, value in list(self.active_stocks.items())[:10]:
+            print(f"{symbol}: {value:.2f}%")
+
+        # decending value is incorrectly printed
+        # print("\nBotom 10 Nifty Stocks[DOWNWARDS]:")
+        # for symbol, value in list(self.nifty50_stocks.items())[:10]:
+        #     print(f"{symbol}: {value:.2f}%")
 
 
 class Summarization:
@@ -212,7 +232,7 @@ class Summarization:
             DRet = []
             holidays = []
             start_date = datetime.strptime(start_date, "%Y-%m-%d")
-            end_date = date = datetime.strptime(end_date, "%Y-%m-%d")
+            end_date = datetime.strptime(end_date, "%Y-%m-%d")
 
             date_range = pd.date_range(
                 start=end_date, end=start_date)
@@ -302,7 +322,7 @@ failed = ['INFRATEL.NS', 'INF.NS', 'HDFC.NS']
 
 # PORFOLIO CLASS
 p1 = Portfolio(nifty50_ticker_list)
+
+# print(p1.Nifty50_monthlyRet())
 AS_list, AST10_list = p1.ActiveStockSelectionStrategy()
-print(AS_list)
-print('TOP 10 LIST')
-print(AST10_list)
+# p1.display_stock_selection()
