@@ -16,13 +16,17 @@ class Stocks:
 
     def __init__(self, symbol):
 
+        self.symbol = symbol
+
         # Get the data for the stock
         self.hist_data = yf.download(
             tickers=symbol, interval='1d', period='1y', rounding=True)  # YYYY-MM-DD
 
-        print('-'*50)
-        print(self.hist_data.head())
-        print('-'*50)
+        # print('-'*50)
+        # print(self.hist_data.head())
+        # print(self.symbol)
+        # print(len(self.hist_data))
+        # print('-'*50)
 
         # Get the current date
         self.todays_date = datetime.now().date()
@@ -116,15 +120,40 @@ class Benchmarking:
 
 
 class Portfolio:
-    def __init__(self):
-        # TWO OPTIONS FOR HAVING HIST_DATA INTHIS CLASS
-        # 1. EITHER USE @CLASSMETHOD DECORATOR AND CLASS THE STOCK METHOD IN THIS WAY
-        # OR
-        # 2. CREATE A NEW STOCK CLASS INSTANCE WITH THE INIT OF THIS CLASS
-        pass
+    # def __init__(self, class_instance):
+    #     self.class_instance = class_instance
+    #     self.hist_data = class_instance.hist_data
+    #     self.todays_date = class_instance.todays_date
 
-    def ActiveStockSelectionStrategy(self, stock_list):
-        pass
+    # def ActiveStockSelectionStrategy(self, stock_list):
+    #     selected_stocks = []
+    #     for stock in stocks:
+    #         monthly_return = stock.MonthlyRet(curDate)
+    #         if monthly_return > 0:
+    #             selected_stocks.append(stock.symbol)
+    #     return selected_stocks
+
+    def __init__(self, symbols):
+        self.symbols = symbols
+        self.stocks = [Stocks(symbol) for symbol in symbols]
+
+    def ActiveStockSelectionStrategy(self):
+        active_stocks = {}
+
+        for stock in self.stocks:
+            monthly_return = stock.MonthlyRet()
+
+            if monthly_return is not None and monthly_return > 0:
+                active_stocks[stock.symbol] = monthly_return
+
+        active_stocks = dict(sorted(active_stocks.items(),
+                             key=lambda item: item[1], reverse=True))
+
+        print(str(len(active_stocks)) +
+              " Are selected for the active stock strategy")
+        top_10_active_stocks = dict(list(active_stocks.items())[:10])
+
+        return active_stocks, top_10_active_stocks
 
 
 class Summarization:
@@ -254,8 +283,8 @@ s1 = Stocks('ADANIPORTS.NS')
 # print(s1.DailyReturn())  # can take any date upto an year
 # print(s1.Last30Dayprice())  # can take any date of the year
 
-# other_object.access_method(my_object)
-s1_summary = Summarization(s1)
+# SUMMARY CLASSS
+# s1_summary = Summarization(s1)
 
 # print(s1_summary.CAGR(2, '2024-02-14'))
 # print(s1_summary.Volatility('2024-02-14', '2024-01-14'))
@@ -263,9 +292,17 @@ s1_summary = Summarization(s1)
 # print(s1_summary.SharpeRatio('2024-02-14', '2024-01-14'))
 # print(s1_summary.SharpeRatio())
 
-
-nifty50_ticker_list = ['ADANIPORTS.NS', 'ASIANPAINT.NS', 'AXISBANK.NS', 'BAJAJ-AUTO.NS', 'BAJFINANCE.NS', 'BAJAJFINSV.NS', 'BPCL.NS', 'BHARTIARTL.NS', 'INFRATEL.NS', 'CIPLA.NS',
+# NIFTY50 LIST
+nifty50_ticker_list = ['ADANIPORTS.NS', 'ASIANPAINT.NS', 'AXISBANK.NS', 'BAJAJ-AUTO.NS', 'BAJFINANCE.NS', 'BAJAJFINSV.NS', 'BPCL.NS', 'BHARTIARTL.NS', 'CIPLA.NS',
                        'COALINDIA.NS', 'DRREDDY.NS', 'EICHERMOT.NS', 'GAIL.NS', 'GRASIM.NS', 'HCLTECH.NS', 'HDFCBANK.NS', 'HEROMOTOCO.NS', 'HINDALCO.NS', 'HINDPETRO.NS', 'HINDUNILVR.NS',
-                       'HDFC.NS', 'ITC.NS', 'ICICIBANK.NS', 'IBULHSGFIN.NS', 'IOC.NS', 'INDUSINDBK.NS', 'INF.NS', 'JSWSTEEL.NS', 'KOTAKBANK.NS', 'LT.NS',
-                       'M&M', 'MARUTI', 'NTPC', 'ONGC', 'POWERGRID', 'RELIANCE', 'SBIN', 'SUNPHARMA', 'TCS', 'TATAMOTORS',
+                       'ITC.NS', 'ICICIBANK.NS', 'IBULHSGFIN.NS', 'IOC.NS', 'INDUSINDBK.NS', 'JSWSTEEL.NS', 'KOTAKBANK.NS', 'LT.NS',
+                       'M&M.NS', 'MARUTI.NS', 'NTPC.NS', 'ONGC.NS', 'POWERGRID.NS', 'RELIANCE.NS', 'SBIN.NS', 'SUNPHARMA.NS', 'TCS.NS', 'TATAMOTORS.NS',
                        'TATASTEEL.NS', 'TECHM.NS', 'TITAN.NS', 'UPL.NS', 'ULTRACEMCO.NS', 'VEDL.NS', 'WIPRO.NS', 'YESBANK.NS', 'ZEEL.NS']
+failed = ['INFRATEL.NS', 'INF.NS', 'HDFC.NS']
+
+# PORFOLIO CLASS
+p1 = Portfolio(nifty50_ticker_list)
+AS_list, AST10_list = p1.ActiveStockSelectionStrategy()
+print(AS_list)
+print('TOP 10 LIST')
+print(AST10_list)
