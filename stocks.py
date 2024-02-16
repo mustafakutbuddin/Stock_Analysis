@@ -43,12 +43,6 @@ class Stocks:
         self.hist_data = yf.download(
             tickers=symbol, interval='1d', period='1y', rounding=True)  # YYYY-MM-DD
 
-        print('-'*50)
-        print(self.hist_data.head())
-        print(self.symbol)
-        print(len(self.hist_data))
-        print('-'*50)
-
         # Get the current date
         self.todays_date = datetime.now().date()
 
@@ -157,6 +151,12 @@ class Stocks:
             date = datetime.strptime(date, "%Y-%m-%d")
             prevMonthDate = date - timedelta(days=30)
             return (self.hist_data.loc[prevMonthDate:date]['Adj Close']).to_numpy()
+
+    def DisplayDataframe(self):
+        # st.dataframe(self.hist_data.head(10), width=800)
+        with st.expander("Stock data"):
+            # Display in an expandable section
+            st.dataframe(self.hist_data.head(10), width=800)
 
 
 class Benchmarking:
@@ -275,8 +275,10 @@ class Portfolio:
             f"{len(self.nifty50_stocks) - len(self.active_stocks)} Stocks not selected (DOWNWARDS).")
 
         print("\nTop 10 Active Stocks[UPWARDS]:")
+        st.write("TOP STOCK SELECTED BASED ON MONTHLY RETURNS")
         for symbol, value in list(self.active_stocks.items())[:10]:
-            print(f"{symbol}: {value:.2f}%")
+            # print(f"{symbol}: {value:.2f}%")
+            st.write(f"{symbol}: {value:.2f}%")
 
 
 class Summarization:
@@ -371,7 +373,10 @@ class Summarization:
                     # pass
 
             # print(DRet)
-            return (round((math.sqrt(252)*(statistics.stdev(DRet)))*100, 2))
+            vol = (math.sqrt(252)*(statistics.stdev(DRet)))*100
+            st.write('The Sharpe Ratio of the stock selected:- ' +
+                     str(round(vol, 2)))
+            return (round(vol, 2))
 
         else:
             # print('in else statement of Volatility')
@@ -392,7 +397,11 @@ class Summarization:
                 except KeyError:
                     holidays.append(str(date))
                     # pass
-            return (round((math.sqrt(252)*(statistics.stdev(DRet)))*100, 2))
+
+            vol = (math.sqrt(252)*(statistics.stdev(DRet)))*100
+            st.write('The Sharpe Ratio of the stock selected:- ' +
+                     str(round(vol, 2)))
+            return (round(vol, 2))
 
     def SharpeRatio(self, start_date=None, end_date=None):
         """
@@ -428,7 +437,10 @@ class Summarization:
                     # pass
 
             # print(DRet)
-            return (round(math.sqrt(252)*(np.mean(DRet)/statistics.stdev(DRet)), 2))
+            spr = math.sqrt(252)*(np.mean(DRet)/statistics.stdev(DRet))
+            st.write('The Sharpe Ratio of the stock selected:- ' +
+                     str(round(spr, 2)))
+            return (round(spr, 2))
 
         else:
             # print('in else statement of Volatility')
@@ -451,11 +463,14 @@ class Summarization:
                     holidays.append(str(date))
                     # pass
 
-            return (round(math.sqrt(252)*(np.mean(DRet)/statistics.stdev(DRet)), 2))
+            spr = math.sqrt(252)*(np.mean(DRet)/statistics.stdev(DRet))
+            st.write('The Sharpe Ratio of the stock selected:- ' +
+                     str(round(spr, 2)))
+            return (round(spr, 2))
 
 
 # MAIN
-s1 = Stocks('ADANIPORTS.NS')
+# s1 = Stocks('ADANIPORTS.NS')
 
 # print(s1.CurPrice('2024-02-14'))
 # print(s1.MonthlyRet())  # from to[will be 30 days before the start date]
@@ -477,7 +492,7 @@ nifty50_ticker_list = ['ADANIPORTS.NS', 'ASIANPAINT.NS', 'AXISBANK.NS', 'BAJAJ-A
                        'ITC.NS', 'ICICIBANK.NS', 'IBULHSGFIN.NS', 'IOC.NS', 'INDUSINDBK.NS', 'JSWSTEEL.NS', 'KOTAKBANK.NS', 'LT.NS',
                        'M&M.NS', 'MARUTI.NS', 'NTPC.NS', 'ONGC.NS', 'POWERGRID.NS', 'RELIANCE.NS', 'SBIN.NS', 'SUNPHARMA.NS', 'TCS.NS', 'TATAMOTORS.NS',
                        'TATASTEEL.NS', 'TECHM.NS', 'TITAN.NS', 'UPL.NS', 'ULTRACEMCO.NS', 'VEDL.NS', 'WIPRO.NS', 'YESBANK.NS', 'ZEEL.NS']
-failed = ['INFRATEL.NS', 'INF.NS', 'HDFC.NS']
+# failed = ['INFRATEL.NS', 'INF.NS', 'HDFC.NS']
 
 # PORFOLIO CLASS
 # p1 = Portfolio(nifty50_ticker_list)
@@ -488,3 +503,42 @@ failed = ['INFRATEL.NS', 'INF.NS', 'HDFC.NS']
 
 # BENCHMARKIING CLASS
 # b1 = Benchmarking(s1)
+
+
+# App layout and functionality
+# Set page layout for better aesthetics
+st.set_page_config(page_title='MoneyPeek', page_icon='random')
+
+st.title("STOCK ANALYSIS")
+st.markdown("**Select start and end dates to display performance matrices:**")
+
+start_date = str(st.date_input("Start Date"))
+end_date = str(st.date_input("End Date"))
+
+# Create the drop-down with a label and default selection
+selected_option = st.selectbox("Choose a Stock:", nifty50_ticker_list)
+
+selectedStock = Stocks(selected_option)
+
+st.markdown("## HISTORICAL DATA OF " + str(selected_option))
+selectedStock.DisplayDataframe()
+
+selectedStock_summary = Summarization(selectedStock)
+
+st.markdown("## STOCK PERFORMANCE MATRIX")
+
+st.write('The Daily return of the stock selected:- ' +
+         str(selectedStock.DailyReturn()))
+st.write('The Monthly return of the stock selected:- ' +
+         str(selectedStock.MonthlyRet()))
+
+selectedStock_summary.Volatility(start_date, end_date)
+selectedStock_summary.SharpeRatio(start_date, end_date)
+
+
+portfolio = Portfolio(nifty50_ticker_list)
+portfolio.Nifty50_monthlyRet()
+AS_list, AST10_list = portfolio.ActiveStockSelectionStrategy()
+
+st.markdown("## TOP 10 STOCKS IN PORTFOLIO")
+portfolio.display_stock_selection()
