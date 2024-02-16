@@ -1,4 +1,4 @@
-# Import the yfinance. If you get module not found error the run !pip install yfinance from your Jupyter notebook
+# Import the yfinance.
 import yfinance as yf
 
 import pandas as pd
@@ -13,32 +13,71 @@ import statistics
 
 
 class Stocks:
+    """
+    A class representing stock data and providing methods for initilizing stocks historical data.
+
+    Attributes:
+        symbol (str): The symbol representing the stock.
+        hist_data (pandas.DataFrame): Historical data for the stock.
+        todays_date (datetime.date): The current date.
+
+    Methods:
+        __init__(self, symbol):
+        CurPrice(self, date):
+        DailyReturn(self, date=None):
+        MonthlyRet(self, start_date=None):
+        Last30Dayprice(self, date=None):
+    """
 
     def __init__(self, symbol):
+        """
+        Initializes a Stocks object with the provided symbol, downloads historical data,
+        and sets the current date.
 
+        Parameters:
+            symbol (str): The symbol representing the stock.
+        """
         self.symbol = symbol
 
         # Get the data for the stock
         self.hist_data = yf.download(
             tickers=symbol, interval='1d', period='1y', rounding=True)  # YYYY-MM-DD
 
-        # print('-'*50)
-        # print(self.hist_data.head())
-        # print(self.symbol)
-        # print(len(self.hist_data))
-        # print('-'*50)
+        print('-'*50)
+        print(self.hist_data.head())
+        print(self.symbol)
+        print(len(self.hist_data))
+        print('-'*50)
 
         # Get the current date
         self.todays_date = datetime.now().date()
 
     def CurPrice(self, date):
+        """
+        Returns the adjusted closing price of the stock on the specified date.
+
+        Parameters:
+            date (str or datetime.date): The date for which the adjusted closing price is requested.
+
+        Returns:
+            float: The adjusted closing price of the stock on the specified date.
+        """
         return (self.hist_data.loc[str(date)]['Adj Close'])
 
-    # @staticmethod
-    # def CurPriceE(date):
-    #     return (Stocks.hist_data.loc[str(date)]['Adj Close'])
-
     def DailyReturn(self, date=None):
+        """
+        Calculates the daily return of the stock. If no date is provided, it calculates the daily return
+        from the previous day to the current day. If a date is provided, it calculates the daily return
+        from the day before the specified date to the specified date.
+
+        Parameters:
+            date (str or datetime.date, optional): The end date for calculating the daily return.
+                Defaults to None.
+
+        Returns:
+            float: The daily return of the stock.
+        """
+
         if date is None:
             # print('in if statement of daily ret')
 
@@ -58,6 +97,19 @@ class Stocks:
             return (round(dailyret, 4))
 
     def MonthlyRet(self, start_date=None):
+        """
+        Calculates the monthly return of the stock. If no start date is provided, it calculates the monthly
+        return for the last 30 days from the current date. If a start date is provided, it calculates the
+        monthly return for the 30 days leading up to the specified start date.
+
+        Parameters:
+            start_date (str or datetime.date, optional): The start date for calculating the monthly return.
+                Defaults to None.
+
+        Returns:
+            float: The monthly return of the stock.
+        """
+
         if start_date is None:
             # print('in if statement of monthly ret')
 
@@ -80,27 +132,19 @@ class Stocks:
 
             return (round(monthlyret, 2))
 
-    # @staticmethod
-    # def DailyReturnS(date=None):
-    #     if date is None:
-    #         print('in if statement of daily ret')
-    #         date = date = datetime.now().date()
-    #         prevDate = date - timedelta(days=1)
-    #         dailyret = (Stocks.CurPriceE(date) /
-    #                     Stocks.CurPriceE(prevDate))-1
-
-    #         return (round(dailyret, 4))
-
-    #     else:
-    #         print('in else statement of daily ret')
-
-    #         date = datetime.strptime(date, "%Y-%m-%d")
-    #         prevDate = date - timedelta(days=1)
-    #         dailyret = (Stocks.CurPriceE(date)/Stocks.CurPriceE(prevDate))-1
-
-    #         return (round(dailyret, 4))
-
     def Last30Dayprice(self, date=None):
+        """
+        Retrieves the adjusted closing prices of the stock for the last 30 days. If no date is provided,
+        it retrieves the prices for the last 30 days from the current date. If a date is provided, it
+        retrieves the prices for the 30 days leading up to the specified date.
+
+        Parameters:
+            date (str or datetime.date, optional): The end date for retrieving the prices.
+                Defaults to None.
+
+        Returns:
+            numpy.ndarray: An array containing the adjusted closing prices for the last 30 days.
+        """
         if date is None:
             # print('in if statement of last 30 days')
 
@@ -116,17 +160,62 @@ class Stocks:
 
 
 class Benchmarking:
-    def __init__(self):
+    def __init__(self, class_instance, symbols):
         self.nifty50_price = yf.download(
             tickers='^NSEI', interval='1d', period='1y', rounding=True)
+        self.class_instance = class_instance
 
-    def CompairWithBenchmark(self):
-        pass
+        self.symbols = symbols
+        self.stocks = [Stocks(symbol) for symbol in symbols]
+
+    def CompairWithBenchmark(self, start_date=None, end_date=None):
+        if start_date is None and end_date is None:
+
+            todays_date = datetime.now().date()
+            prevMonthDate = todays_date - timedelta(days=30)
+
+            date_range = pd.date_range(
+                start=prevMonthDate, end=todays_date)
+            # Format dates as "%Y-%m-%d"
+            date_range = date_range.strftime('%Y-%m-%d')
+
+            for stock in self.stocks:
+                for date in date_range:
+
+                    daily_return_per_stock = stock.DailyReturn()
+                    self.nifty50_stocks[stock.symbol] = daily_return_per_stock
+
+                nifty50_stocks = dict(sorted(self.nifty50_stocks.items(),
+                                             key=lambda item: item[1], reverse=True))
+
+                return (nifty50_stocks)
 
 
 class Portfolio:
+    """
+    A class representing a portfolio of stocks and providing methods for creating a portfolio and analysing it.
+
+    Attributes:
+        symbols (list of str): List of symbols representing the stocks in the portfolio.
+        stocks (list of Stocks): List of Stocks objects representing the individual stocks in the portfolio.
+        nifty50_stocks (dict): Dictionary containing monthly returns of Nifty 50 stocks.
+        active_stocks (dict): Dictionary containing monthly returns of actively selected stocks.
+
+    Methods:
+        __init__(self, symbols):
+        Nifty50_monthlyRet(self):
+        ActiveStockSelectionStrategy(self):
+        display_stock_selection(self):
+    """
 
     def __init__(self, symbols):
+        """
+        Initializes a Portfolio object with the provided list of symbols, creates Stocks objects for each symbol,
+        and initializes empty dictionaries for Nifty 50 stocks and active stocks.
+
+        Parameters:
+            symbols (list of str): List of symbols representing the stocks in the portfolio.
+        """
 
         self.symbols = symbols
         self.stocks = [Stocks(symbol) for symbol in symbols]
@@ -134,6 +223,12 @@ class Portfolio:
         self.active_stocks = {}
 
     def Nifty50_monthlyRet(self):
+        """
+        Calculates the monthly returns of Nifty 50 stocks and sorts them in descending order.
+
+        Returns:
+            dict: Dictionary containing monthly returns of Nifty 50 stocks sorted in descending order.
+        """
 
         for stock in self.stocks:
             monthly_return = stock.MonthlyRet()
@@ -145,6 +240,15 @@ class Portfolio:
         return (nifty50_stocks)
 
     def ActiveStockSelectionStrategy(self):
+        """
+        Implements an active stock selection strategy based on positive monthly returns of Nifty 50 stocks.
+        Selects the top 10 active stocks based on monthly returns.
+
+        Returns:
+            tuple: A tuple containing two dictionaries:
+                   - Dictionary containing monthly returns of actively selected stocks.
+                   - Dictionary containing top 10 actively selected stocks.
+        """
 
         for symbol, value in self.Nifty50_monthlyRet().items():
             if value > 0:
@@ -158,6 +262,10 @@ class Portfolio:
         return active_stocks, top_10_active_stocks
 
     def display_stock_selection(self):
+        """
+        Displays information about the stock selection process including the total number of stocks, the number
+        of stocks selected for the active strategy, the number of stocks not selected, and the top 10 active stocks.
+        """
 
         print(
             f"\n{len(self.nifty50_stocks)} Stocks in total.")
@@ -170,20 +278,47 @@ class Portfolio:
         for symbol, value in list(self.active_stocks.items())[:10]:
             print(f"{symbol}: {value:.2f}%")
 
-        # decending value is incorrectly printed
-        # print("\nBotom 10 Nifty Stocks[DOWNWARDS]:")
-        # for symbol, value in list(self.nifty50_stocks.items())[:10]:
-        #     print(f"{symbol}: {value:.2f}%")
-
 
 class Summarization:
+    """
+    A class providing methods for summarizing stock data and analyzing stock performance.
+
+    Attributes:
+        class_instance: An instance of the class containing stock data.
+        hist_data (pandas.DataFrame): Historical data for the stock.
+        todays_date (datetime.date): The current date.
+
+    Methods:
+        __init__(self, class_instance):
+        CAGR(self, numYears, date=None):
+        Volatility(self, start_date=None, end_date=None):
+        SharpeRatio(self, start_date=None, end_date=None): 
+    """
 
     def __init__(self, class_instance):
+        """
+        Initializes a Summarization object with the provided instance of a class containing stock data.
+
+        Parameters:
+            class_instance: An instance of the class containing stock data.
+        """
+
         self.class_instance = class_instance
         self.hist_data = class_instance.hist_data
         self.todays_date = class_instance.todays_date
 
     def CAGR(self, numYears, date=None):
+        """
+        Calculates the Compound Annual Growth Rate (CAGR) of the stock.
+
+        Parameters:
+            numYears (int): Number of years for calculating CAGR.
+            date (str or datetime.date, optional): The end date for calculating CAGR.
+                Defaults to None.
+
+        Returns:
+            float: The calculated CAGR.
+        """
 
         if date is None:
             # print('in if statement of CAGR')
@@ -203,6 +338,18 @@ class Summarization:
             return (round(value_cagr, 2))
 
     def Volatility(self, start_date=None, end_date=None):
+        """
+        Calculates the volatility of the stock.
+
+        Parameters:
+            start_date (str or datetime.date, optional): The start date for calculating volatility.
+                Defaults to None.
+            end_date (str or datetime.date, optional): The end date for calculating volatility.
+                Defaults to None.
+
+        Returns:
+            float: The calculated volatility.
+        """
         if start_date is None and end_date is None:
             # print('in if statement of Volatility')
 
@@ -248,6 +395,18 @@ class Summarization:
             return (round((math.sqrt(252)*(statistics.stdev(DRet)))*100, 2))
 
     def SharpeRatio(self, start_date=None, end_date=None):
+        """
+        Calculates the Sharpe Ratio of the stock.
+
+        Parameters:
+            start_date (str or datetime.date, optional): The start date for calculating the Sharpe Ratio.
+                Defaults to None.
+            end_date (str or datetime.date, optional): The end date for calculating the Sharpe Ratio.
+                Defaults to None.
+
+        Returns:
+            float: The calculated Sharpe Ratio.
+        """
         if start_date is None and end_date is None:
             # print('in if statement of Volatility')
 
@@ -321,8 +480,11 @@ nifty50_ticker_list = ['ADANIPORTS.NS', 'ASIANPAINT.NS', 'AXISBANK.NS', 'BAJAJ-A
 failed = ['INFRATEL.NS', 'INF.NS', 'HDFC.NS']
 
 # PORFOLIO CLASS
-p1 = Portfolio(nifty50_ticker_list)
+# p1 = Portfolio(nifty50_ticker_list)
 
 # print(p1.Nifty50_monthlyRet())
-AS_list, AST10_list = p1.ActiveStockSelectionStrategy()
+# AS_list, AST10_list = p1.ActiveStockSelectionStrategy()
 # p1.display_stock_selection()
+
+# BENCHMARKIING CLASS
+# b1 = Benchmarking(s1)
