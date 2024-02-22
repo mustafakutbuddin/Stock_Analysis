@@ -505,6 +505,8 @@ nifty50_ticker_list = ['ADANIPORTS.NS', 'ASIANPAINT.NS', 'AXISBANK.NS', 'BAJAJ-A
 # b1 = Benchmarking(s1)
 
 
+# USER INTERFACE
+
 # App layout and functionality
 # Set page layout for better aesthetics
 st.set_page_config(page_title='MoneyPeek', page_icon='random')
