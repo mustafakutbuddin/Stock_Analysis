@@ -1,0 +1,28 @@
+import yfinance as yf
+
+class Stock:
+    def __init__(self, ticker):
+        self.ticker = ticker
+        self.historical_prices = self.get_historical_prices()
+
+    def get_historical_prices(self):
+        # Use yfinance to fetch historical prices for the stock
+        # Implement logic to download historical prices for the stock
+        # Return a pandas DataFrame or any suitable data structure
+        pass
+
+    def cur_price(self, cur_date):
+        # Return the closing price of the specified date
+        pass
+
+    def monthly_ret(self, cur_date):
+        # Return the monthly returns on the specified date
+        pass
+
+    def daily_ret(self, cur_date):
+        # Return the daily returns on the specified date
+        pass
+
+    def last_30_days_price(self, cur_date):
+        # Return an array of last 30 days prices
+        pass

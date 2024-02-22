@@ -1,0 +1,25 @@
+
+
+class Stock:
+    def __init__(self, symbol):
+        self.symbol = symbol
+        self.data = yf.download(symbol, start="2010-01-01", end="2024-01-01")
+        
+    def curPrice(self, curDate):
+        return self.data.loc[curDate]['Close']
+    
+    def MonthlyRet(self, curDate):
+        curMonth = curDate.month
+        prevMonth = curMonth - 1 if curMonth > 1 else 12
+        prevYear = curDate.year if curMonth > 1 else curDate.year - 1
+        prevMonthData = self.data[(self.data.index.month == prevMonth) & (self.data.index.year == prevYear)]
+        curMonthData = self.data[self.data.index == curDate]
+        return (curMonthData['Close'].iloc[0] - prevMonthData['Close'].iloc[0]) / prevMonthData['Close'].iloc[0]
+    
+    def DailyRet(self, curDate):
+        prevDate = curDate - pd.DateOffset(1)
+        return (self.curPrice(curDate) - self.curPrice(prevDate)) / self.curPrice(prevDate)
+    
+    def Last30daysPrice(self, curDate):
+        prev30days = curDate - pd.DateOffset(30)
+        return self.data.loc[prev30days:curDate]['Close'].values

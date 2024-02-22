@@ -1,0 +1,19 @@
+import numpy as np
+
+def CAGR(values):
+    return (values[-1]/values[0])**(1/len(values)) - 1
+
+def Volatility(returns):
+    return np.std(returns) * np.sqrt(252) * 100
+
+def SharpeRatio(returns):
+    mean_return = np.mean(returns) * 252
+    return mean_return / Volatility(returns)
+
+def ActiveStockSelectionStrategy(stocks, curDate):
+    selected_stocks = []
+    for stock in stocks:
+        monthly_return = stock.MonthlyRet(curDate)
+        if monthly_return > 0:
+            selected_stocks.append(stock.symbol)
+    return selected_stocks
