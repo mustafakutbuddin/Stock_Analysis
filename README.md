@@ -16,23 +16,27 @@ Welcome to the Stock Analysis tool! This project serves as a **boilerplate code*
    git clone https://github.com/mustafakutbuddin/Stock_Analysis.git
    cd stock-analysis-streamlit
    ```
-2. **Create a new branch:**
+2. **Navigate to the project folder:**
+   ```sh
+   cd stock-analysis-streamlit
+   ```
+3. **Create a new branch:**
    ```sh
    git checkout -b my-new-branch
    ```
-3. **Commit your changes:**
+4. **Commit your changes:**
    ```sh
    git commit -m "Relevant message"
    ```
-4. **Push:**
+5. **Push:**
    ```sh
    git push origin my-new-branch
    ```
-5. **Install dependencies:**
+6. **Install dependencies:**
    ```sh
    pip install -r requirements.txt
    ```
-6. **Run the Streamlit app:**
+7. **Run the Streamlit app:**
    ```sh
    streamlit run app.py
    ```
